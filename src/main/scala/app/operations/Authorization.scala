@@ -1,7 +1,9 @@
 package app.operations
 
 import app.config.JsonPaths.usersPath
+import app.errors.ErrorMessages.{errorMessageAuthInvalidUsernameAndPass, errorMessageAuthInvalidPass}
 import app.models.{Session, User, UserJsonUtil}
+import app.ui.Console.getInputSelector
 
 import scala.annotation.tailrec
 import scala.io.StdIn
@@ -18,29 +20,36 @@ object Authorization {
   }
 
   @tailrec
-  def authorizeUser: Session = {
+  def authorizeUser: Option[Session] = {
     val username = getUsername
     val password = getPassword
     checkValidFromJson(username, password) match {
       case "new" => {
-        val newUser = User(username, password)
-        val updatedUsers = users :+ newUser
-        UserJsonUtil.saveUsersToJsonFile(updatedUsers, usersPath)
-
-        println(s"Вы новый пользователь! Добро пожаловать $username!")
-        println()
-        Session(username)
+        errorMessageAuthInvalidUsernameAndPass()
+        getInputSelector match {
+          case "1" => {
+            val newUser = User(username, password)
+            val updatedUsers = users :+ newUser
+            UserJsonUtil.saveUsersToJsonFile(updatedUsers, usersPath)
+            println(s"Вы новый пользователь! Добро пожаловать $username!")
+            println()
+            Some(Session(username))
+          }
+          case "2" => authorizeUser
+          case _   => None
+        }
       }
       case "valid" => {
         println(s"Добро пожаловать $username!")
         println()
-        Session(username)
+        Some(Session(username))
       }
       case "invalid" => {
-        println("Ошибка авторизации. Неправильный пароль к логину")
-        println("Повторите авторизацию!")
-        println()
-        authorizeUser
+        errorMessageAuthInvalidPass()
+        getInputSelector match {
+          case "0" => None
+          case _   => authorizeUser
+        }
       }
     }
   }
