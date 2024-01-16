@@ -1,19 +1,33 @@
+import app.models.User
 import org.scalatest.flatspec.AnyFlatSpec
 import org.scalatest.matchers.should.Matchers
 import app.operations.Authorization
 
 class AuthorizationTest extends AnyFlatSpec with Matchers {
-  // Тест для проверки Авторизации на случайных данных
-  it should "successfully authenticate with random input" in {
-    // Arrange (подготовка данных для теста)
-    val authorization = Authorization
+  it should "return an valid for an valid username and password" in {
+    val validUsername = "root"
+    val validPassword = "pass"
 
-    // Act (выполнение действия, которое нужно протестировать)
-    val session = authorization.startAuth()
+    val checkValid = Authorization.checkValidFromJson(validUsername, validPassword)
 
-    // Assert (проверка результата)
-    session should not be null
+    checkValid shouldEqual "valid"
   }
 
-  // Другие тесты...
+  it should "return an invalid for an valid username but invalid password" in {
+    val validUsername = "root"
+    val invalidPassword = "qwerty"
+
+    val checkValid = Authorization.checkValidFromJson(validUsername, invalidPassword)
+
+    checkValid shouldEqual "invalid"
+  }
+
+  it should "return an new for an invalid username and password" in {
+    val newUsername = "new_root"
+    val newPassword = "mew_pass"
+
+    val checkValid = Authorization.checkValidFromJson(newUsername, newPassword)
+
+    checkValid shouldEqual "new"
+  }
 }

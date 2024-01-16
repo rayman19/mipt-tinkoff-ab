@@ -1,41 +1,46 @@
 package app.operations
 
-import app.ui.console.Console.cls
+import app.config.JsonPaths.usersPath
+import app.models.{Session, User, UserJsonUtil}
+
 import scala.annotation.tailrec
 import scala.io.StdIn
 
-case class Session(username: String, password: String) {
-
-}
-
 object Authorization {
-  @tailrec
-  def startAuth(): Session = {
-    def checkValidFromDb(username: String, password: String): String = {
-      // заглушка
-      "invalid"
-    }
+  val users: Seq[User] = UserJsonUtil.loadUsersFromJsonFile(usersPath)
 
+  def checkValidFromJson(username: String, password: String): String = {
+    users.find(_.username == username) match {
+      case Some(user) if user.password == password => "valid"
+      case Some(_) => "invalid"
+      case None => "new"
+    }
+  }
+
+  @tailrec
+  def authorizeUser: Session = {
     val username = getUsername
     val password = getPassword
-    checkValidFromDb(username, password) match {
+    checkValidFromJson(username, password) match {
       case "new" => {
+        val newUser = User(username, password)
+        val updatedUsers = users :+ newUser
+        UserJsonUtil.saveUsersToJsonFile(updatedUsers, usersPath)
+
         println(s"Вы новый пользователь! Добро пожаловать $username!")
         println()
-        Session(username, password)
+        Session(username)
       }
       case "valid" => {
         println(s"Добро пожаловать $username!")
         println()
-        Session(username, password)
+        Session(username)
       }
       case "invalid" => {
         println("Ошибка авторизации. Неправильный пароль к логину")
         println("Повторите авторизацию!")
         println()
-        // он почему-то не работает
-        // cls()
-        startAuth()
+        authorizeUser
       }
     }
   }
