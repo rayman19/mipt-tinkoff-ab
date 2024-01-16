@@ -1,6 +1,7 @@
-package app.ui.console
+package app.ui
 
-import sys.process._
+import scala.io.StdIn
+import scala.sys.process._
 
 object Console {
   def cls(): Unit = {
@@ -10,5 +11,10 @@ object Console {
     } else {
       "clear".!
     }
+  }
+
+  def getInputSelector: String = {
+    print("Введите номер: ")
+    StdIn.readLine()
   }
 }
