@@ -1,5 +1,7 @@
 package app.operations
 
+import app.models.Session
+
 trait Screen {
-  def view(): Unit
+  def view(session: Session): Unit
 }

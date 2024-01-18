@@ -1,25 +1,25 @@
 package app.operations
 
 import app.errors.ErrorMessages.errorMessageInputSelector
+import app.models.Session
 import app.ui.Render.renderMainMenu
 import app.ui.Console.getInputSelector
-
 import scala.annotation.tailrec
 
 object AccountService extends Screen {
-  @tailrec
-  def view(): Unit = {
+  def view(session: Session): Unit = {
     renderMainMenu()
     getInputSelector match {
-      case "1" => ViewAccounts.view()
-      case "2" => CreateAccount.view()
-      case "3" => CloseAccount.view()
-      case "4" => GenerateReport.view()
+      case "1" => ViewAccounts.view(session)
+      case "2" => OpenAccount.view(session)
+      case "3" => CloseAccount.view(session)
+      case "4" => GenerateReport.view(session)
       case "0" => ()
       case _   => {
         errorMessageInputSelector()
-        this.view()
+        this.view(session)
       }
     }
+    this.view(session)
   }
 }

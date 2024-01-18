@@ -17,4 +17,16 @@ object ErrorMessages {
     println("2. Нет. Ввести заново данные")
     println("0. Выйти из приложения")
   }
+
+  def errorMessageNegativeBalance(): Unit = {
+    println("Ошибка. Баланс не может быть отрицательным!")
+  }
+
+  def errorMessageNegativeLimit(): Unit = {
+    println("Ошибка. Лимит не может быть отрицательным!")
+  }
+
+  def errorMessageBalanceCrossLimit(): Unit = {
+    println("Ошибка. Баланс находится не в рамках лимита!")
+  }
 }

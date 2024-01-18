@@ -1,9 +1,10 @@
 package app.operations
 
-import app.config.JsonPaths.usersPath
+import app.config.JsonPaths.{basePath, creditAccountsPath, debitAccountsPath, savingsAccountsPath, usernamePath, usersPath}
 import app.errors.ErrorMessages.{errorMessageAuthInvalidPass, errorMessageAuthInvalidUsernameAndPass}
-import app.models.{AuthStatus, Invalid, New, Session, User, UserJsonUtil, Valid}
+import app.models.{AccountJsonUtil, AuthStatus, Invalid, New, Session, User, UserJsonUtil, Valid}
 import app.ui.Console.getInputSelector
+
 import scala.io.StdIn
 
 object Authorization {
@@ -26,6 +27,10 @@ object Authorization {
         val newUser = User(username, password)
         val updatedUsers = users :+ newUser
         UserJsonUtil.saveUsersToJsonFile(updatedUsers, usersPath)
+        UserJsonUtil.mkdirUsername(usernamePath(username))
+        AccountJsonUtil.createEmptyJson(debitAccountsPath(username))
+        AccountJsonUtil.createEmptyJson(creditAccountsPath(username))
+        AccountJsonUtil.createEmptyJson(savingsAccountsPath(username))
         println(s"Вы новый пользователь! Добро пожаловать $username!")
         println()
         Some(Session(username))
