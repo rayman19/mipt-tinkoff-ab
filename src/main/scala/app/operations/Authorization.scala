@@ -1,56 +1,62 @@
 package app.operations
 
 import app.config.JsonPaths.usersPath
-import app.errors.ErrorMessages.{errorMessageAuthInvalidUsernameAndPass, errorMessageAuthInvalidPass}
-import app.models.{Session, User, UserJsonUtil}
+import app.errors.ErrorMessages.{errorMessageAuthInvalidPass, errorMessageAuthInvalidUsernameAndPass}
+import app.models.{AuthStatus, Invalid, New, Session, User, UserJsonUtil, Valid}
 import app.ui.Console.getInputSelector
-
-import scala.annotation.tailrec
 import scala.io.StdIn
 
 object Authorization {
   val users: Seq[User] = UserJsonUtil.loadUsersFromJsonFile(usersPath)
 
-  def checkValidFromJson(username: String, password: String): String = {
+  def checkValidFromJson(username: String, password: String): AuthStatus = {
     users.find(_.username == username) match {
-      case Some(user) if user.password == password => "valid"
-      case Some(_) => "invalid"
-      case None => "new"
+      case Some(user) if user.password == password => Valid
+      case Some(_)                                 => Invalid
+      case None                                    => New
     }
   }
 
-  @tailrec
   def authorizeUser: Option[Session] = {
     val username = getUsername
     val password = getPassword
-    checkValidFromJson(username, password) match {
-      case "new" => {
-        errorMessageAuthInvalidUsernameAndPass()
-        getInputSelector match {
-          case "1" => {
-            val newUser = User(username, password)
-            val updatedUsers = users :+ newUser
-            UserJsonUtil.saveUsersToJsonFile(updatedUsers, usersPath)
-            println(s"Вы новый пользователь! Добро пожаловать $username!")
-            println()
-            Some(Session(username))
-          }
-          case "2" => authorizeUser
-          case _   => None
-        }
-      }
-      case "valid" => {
-        println(s"Добро пожаловать $username!")
+
+    def WorkWithNewUser = {
+      def addUser() = {
+        val newUser = User(username, password)
+        val updatedUsers = users :+ newUser
+        UserJsonUtil.saveUsersToJsonFile(updatedUsers, usersPath)
+        println(s"Вы новый пользователь! Добро пожаловать $username!")
         println()
         Some(Session(username))
       }
-      case "invalid" => {
-        errorMessageAuthInvalidPass()
-        getInputSelector match {
-          case "0" => None
-          case _   => authorizeUser
-        }
+
+      errorMessageAuthInvalidUsernameAndPass()
+      getInputSelector match {
+        case "1" => addUser()
+        case "2" => authorizeUser
+        case _   => None
       }
+    }
+
+    def WorkWithAuthUser = {
+      println(s"Добро пожаловать $username!")
+      println()
+      Some(Session(username))
+    }
+
+    def WorkWithInvalidUser = {
+      errorMessageAuthInvalidPass()
+      getInputSelector match {
+        case "0" => None
+        case _   => authorizeUser
+      }
+    }
+
+    checkValidFromJson(username, password) match {
+      case New     => WorkWithNewUser
+      case Valid   => WorkWithAuthUser
+      case Invalid => WorkWithInvalidUser
     }
   }
 
