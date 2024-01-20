@@ -10,7 +10,7 @@ import scala.io.StdIn
 object Authorization {
   val users: Seq[User] = UserJsonUtil.loadUsersFromJsonFile(usersPath)
 
-  def checkValidFromJson(username: String, password: String): AuthStatus = {
+  def checkValidFromJson(users: Seq[User], username: String, password: String): AuthStatus = {
     users.find(_.username == username) match {
       case Some(user) if user.password == password => Valid
       case Some(_)                                 => Invalid
@@ -58,7 +58,7 @@ object Authorization {
       }
     }
 
-    checkValidFromJson(username, password) match {
+    checkValidFromJson(users, username, password) match {
       case New     => WorkWithNewUser
       case Valid   => WorkWithAuthUser
       case Invalid => WorkWithInvalidUser

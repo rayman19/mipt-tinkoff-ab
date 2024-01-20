@@ -1,14 +1,18 @@
+import app.config.JsonPaths.usersPath
+import app.config.JsonPathsTests
 import org.scalatest.flatspec.AnyFlatSpec
 import org.scalatest.matchers.should.Matchers
 import app.operations.Authorization
-import app.models.{Invalid, New, Valid}
+import app.models.{Invalid, New, User, UserJsonUtil, Valid}
 
 class AuthorizationTest extends AnyFlatSpec with Matchers {
+  val users: Seq[User] = UserJsonUtil.loadUsersFromJsonFile(JsonPathsTests.usersPath)
+
   it should "return an valid for an valid username and password" in {
     val validUsername = "root"
     val validPassword = "pass"
 
-    val checkValid = Authorization.checkValidFromJson(validUsername, validPassword)
+    val checkValid = Authorization.checkValidFromJson(users, validUsername, validPassword)
 
     checkValid shouldEqual Valid
   }
@@ -17,7 +21,7 @@ class AuthorizationTest extends AnyFlatSpec with Matchers {
     val validUsername = "root"
     val invalidPassword = "qwerty"
 
-    val checkValid = Authorization.checkValidFromJson(validUsername, invalidPassword)
+    val checkValid = Authorization.checkValidFromJson(users, validUsername, invalidPassword)
 
     checkValid shouldEqual Invalid
   }
@@ -26,7 +30,7 @@ class AuthorizationTest extends AnyFlatSpec with Matchers {
     val newUsername = "new_root"
     val newPassword = "mew_pass"
 
-    val checkValid = Authorization.checkValidFromJson(newUsername, newPassword)
+    val checkValid = Authorization.checkValidFromJson(users, newUsername, newPassword)
 
     checkValid shouldEqual New
   }
