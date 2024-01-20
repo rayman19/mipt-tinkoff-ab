@@ -10,12 +10,12 @@ import scala.io.StdIn
 
 object OpenAccount extends Screen {
   @tailrec
-  private def getTypeAccount: AccountType = {
-    Render.RenderOpenAccount.typeAccount()
+  def getTypeAccount: AccountType = {
+    Render.renderTypeAccount()
     getInputSelector match {
-      case "1" => Debit
-      case "2" => Credit
-      case "3" => Savings
+      case 1 => Debit
+      case 2 => Credit
+      case 3 => Savings
       case _ => {
         errorMessageInputSelector()
         getTypeAccount
@@ -42,6 +42,7 @@ object OpenAccount extends Screen {
   }
 
   override def view(session: Session): Unit = {
+    println("\nОТКРЫТИЕ НОВОГО СЧЕТА")
     val typeAccount = getTypeAccount
     val balance = getBalance
     typeAccount match {

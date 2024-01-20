@@ -6,63 +6,63 @@ import play.api.libs.json.{JsValue, Json, OFormat}
 import java.io.{File, PrintWriter}
 import java.nio.file.{Files, Paths}
 import java.time.LocalDateTime
+import java.util.UUID
 
 trait Account {
-
+  def id: UUID
   def balance: Double
   def deposit(amount: Double): Account
-  def withdraw(amount: Double): Either[String, Account]
+  def withdraw(amount: Double): Either[OperationStatus, Account]
 
 }
 
 // Дебетовый счет
-case class DebitAccount(balance: Double) extends Account {
+case class DebitAccount(balance: Double, id: UUID = UUID.randomUUID()) extends Account {
 
   def deposit(amount: Double): Account = {
-    DebitAccount(balance + amount)
+    DebitAccount(balance + amount, id)
   }
 
-  def withdraw(amount: Double): Either[String, DebitAccount] = {
+  def withdraw(amount: Double): Either[OperationStatus, DebitAccount] = {
     if (amount > balance) {
-      Left("Недостаточно средств на счете!")
+      Left(Failed)
     } else {
-      Right(DebitAccount(balance - amount))
+      Right(DebitAccount(balance - amount, id))
     }
   }
-
 }
 
 // Кредитный счет
-case class CreditAccount(balance: Double, limit: Double) extends Account {
+case class CreditAccount(balance: Double, limit: Double, id: UUID = UUID.randomUUID()) extends Account {
 
   def deposit(amount: Double): Account = {
-    CreditAccount(balance + amount, limit)
+    CreditAccount(balance + amount, limit, id)
   }
 
-  def withdraw(amount: Double): Either[String, CreditAccount] = {
+  def withdraw(amount: Double): Either[OperationStatus, CreditAccount] = {
     if (balance - amount + limit < 0) {
-      Left("Операция превышает лимит!")
+      Left(Failed)
     } else {
-      Right(CreditAccount(balance - amount, limit))
+      Right(CreditAccount(balance - amount, limit, id))
     }
   }
 
 }
 
 // Накопительный счет
-case class SavingsAccount(balance: Double, interestRate: Double = 1d) extends Account {
+case class SavingsAccount(balance: Double, interestRate: Double = 1d, id: UUID = UUID.randomUUID()) extends Account {
 
   val dateLastUpdateAccount: LocalDateTime = LocalDateTime.now()
 
   def deposit(amount: Double): Account = {
-    SavingsAccount(balance + amount, interestRate)
+    SavingsAccount(balance + amount, interestRate, id)
   }
 
-  def withdraw(amount: Double): Either[String, SavingsAccount] = {
+  def withdraw(amount: Double): Either[OperationStatus, SavingsAccount] = {
     if (amount > balance) {
-      Left("Недостаточно средств на счете!")
+      Left(Failed)
     } else {
-      Right(SavingsAccount(balance - amount, interestRate))
+      Right(SavingsAccount(balance - amount, interestRate, id))
     }
   }
 
@@ -70,6 +70,34 @@ case class SavingsAccount(balance: Double, interestRate: Double = 1d) extends Ac
     balance * (interestRate / 100)
   }
 
+}
+
+object Account {
+  def viewAccounts(accounts: Seq[Account]): Unit = {
+    accounts.zipWithIndex.foreach {
+      case (account, index) =>
+        account match {
+          case debitAccount: DebitAccount =>
+            println(s"Счет №${index + 1}: Дебетовый счет - Баланс ${debitAccount.balance} руб")
+
+          case creditAccount: CreditAccount =>
+            println(s"Счет №${index + 1}: Кредитный счет - Баланс ${creditAccount.balance} руб, Лимит ${creditAccount.limit} руб")
+
+          case savingsAccount: SavingsAccount =>
+            println(s"Счет №${index + 1}: Накопительный счет - Баланс ${savingsAccount.balance} руб, Процент ${savingsAccount.interestRate}%")
+        }
+    }
+  }
+
+  def isEmptyListAccounts(accounts: Seq[Account]): Boolean = {
+    if (accounts.isEmpty) {
+      println("У вас пока нет открытых счетов")
+      true
+    }
+    else {
+      false
+    }
+  }
 }
 
 object AccountJsonUtil {
@@ -80,6 +108,23 @@ object AccountJsonUtil {
 
   private def checkValidJson(path: String) = {
     Files.exists(Paths.get(path)) && Files.size(Paths.get(path)) > 0
+  }
+
+  def updateAccount(account: Account, username: String): Unit = {
+    account match {
+      case ac: DebitAccount => {
+        val accounts = loadDebitAccountsFromJsonFile(username).filterNot(_.id == account.id)
+        saveDebitAccountToJsonFile(accounts :+ ac, username)
+      }
+      case ac: CreditAccount => {
+        val accounts = loadCreditAccountFromJsonFile(username).filterNot(_.id == account.id)
+        saveCreditAccountToJsonFile(accounts :+ ac, username)
+      }
+      case ac: SavingsAccount => {
+        val accounts = loadSavingsAccountFromJsonFile(username).filterNot(_.id == account.id)
+        saveSavingsAccountToJsonFile(accounts :+ ac, username)
+      }
+    }
   }
 
   def loadDebitAccountsFromJsonFile(username: String): Seq[DebitAccount] = {

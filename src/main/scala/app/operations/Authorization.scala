@@ -38,8 +38,8 @@ object Authorization {
 
       errorMessageAuthInvalidUsernameAndPass()
       getInputSelector match {
-        case "1" => addUser()
-        case "2" => authorizeUser
+        case 1 => addUser()
+        case 2 => authorizeUser
         case _   => None
       }
     }
@@ -53,7 +53,7 @@ object Authorization {
     def WorkWithInvalidUser = {
       errorMessageAuthInvalidPass()
       getInputSelector match {
-        case "0" => None
+        case 0 => None
         case _   => authorizeUser
       }
     }

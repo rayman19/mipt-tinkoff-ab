@@ -8,6 +8,9 @@ object JsonPaths {
   def usersPath: String =
     Paths.get(basePath, "users.json").toString
 
+  def operationsPath(username: String): String =
+    Paths.get(basePath, username, "history.json").toString
+
   def usernamePath(username: String): String =
     Paths.get(basePath, username).toString
   def debitAccountsPath(username: String): String =
@@ -16,6 +19,4 @@ object JsonPaths {
     Paths.get(usernamePath(username), "creditAccounts.json").toString
   def savingsAccountsPath(username: String): String =
     Paths.get(usernamePath(username), "savingsAccounts.json").toString
-  def lastReportPath(username: String): String =
-    Paths.get(usernamePath(username), "lastReport.json").toString
 }

@@ -13,8 +13,15 @@ object Console {
     }
   }
 
-  def getInputSelector: String = {
+  def getInputSelector: Int = {
     print("Введите номер: ")
+    StdIn.readInt()
+  }
+
+  def getAnyButton: String = {
+    print("Введите любую строку для выхода из раздела")
     StdIn.readLine()
   }
+
+  def exit(): Nothing = scala.sys.exit()
 }
